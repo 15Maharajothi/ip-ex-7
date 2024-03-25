@@ -1,0 +1,204 @@
+//program 1
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+@WebServlet("/CityServlet")
+public class CityServlet extends HttpServlet {
+    private static final long serialVersionUID = 1L;
+    
+    // Sample city data
+    private ArrayList<City> cities = new ArrayList<>();
+    
+    public CityServlet() {
+        // Sample city data initialization
+        cities.add(new City("New York", 8175133));
+        cities.add(new City("Los Angeles", 3792621));
+        cities.add(new City("Chicago", 2695598));
+        cities.add(new City("Houston", 2100263));
+        cities.add(new City("Phoenix", 1445632));
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+        
+        // Get the sort parameter from the request
+        String sortType = request.getParameter("sort");
+        if (sortType != null) {
+            if (sortType.equals("name")) {
+                Collections.sort(cities, Comparator.comparing(City::getName));
+            } else if (sortType.equals("population")) {
+                Collections.sort(cities, Comparator.comparingInt(City::getPopulation).reversed());
+            }
+        }
+        
+        // Display the sorted list of cities
+        out.println("<html><head><title>City List</title></head><body>");
+        out.println("<h1>List of Cities</h1>");
+        out.println("<h2>Sorted by " + (sortType != null ? sortType : "Default") + "</h2>");
+        out.println("<table border='1'>");
+        out.println("<tr><th>Name</th><th>Population</th></tr>");
+        for (City city : cities) {
+            out.println("<tr><td>" + city.getName() + "</td><td>" + city.getPopulation() + "</td></tr>");
+        }
+        out.println("</table>");
+        out.println("<br>");
+        out.println("<a href='?sort=name'>Sort by Name</a> | ");
+        out.println("<a href='?sort=population'>Sort by Population</a>");
+        out.println("</body></html>");
+    }
+    
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        doGet(request, response);
+    }
+}
+
+class City {
+    private String name;
+    private int population;
+    
+    public City(String name, int population) {
+        this.name = name;
+        this.population = population;
+    }
+    
+    public String getName() {
+        return name;
+    }
+    
+    public int getPopulation() {
+        return population;
+    }
+}
+//program 2
+import java.io.IOException;
+import java.io.PrintWriter;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+@WebServlet("/LongestWordServlet")
+public class LongestWordServlet extends HttpServlet {
+    private static final long serialVersionUID = 1L;
+    
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+        
+        out.println("<html><head><title>Longest Word Finder</title></head><body>");
+        out.println("<h1>Find the Longest Word</h1>");
+        out.println("<form method='post'>");
+        out.println("Enter a sentence: <input type='text' name='sentence'><br>");
+        out.println("<input type='submit' value='Find Longest Word'>");
+        out.println("</form>");
+        out.println("</body></html>");
+    }
+
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String sentence = request.getParameter("sentence");
+        String longestWord = findLongestWord(sentence);
+        
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+        out.println("<html><head><title>Longest Word Result</title></head><body>");
+        out.println("<h1>Longest Word in the Sentence</h1>");
+        out.println("Sentence: " + sentence + "<br>");
+        out.println("Longest Word: " + longestWord + "<br>");
+        out.println("</body></html>");
+    }
+    
+    private String findLongestWord(String sentence) {
+        String[] words = sentence.split("\\s+");
+        String longestWord = "";
+        for (String word : words) {
+            if (word.length() > longestWord.length()) {
+                longestWord = word;
+            }
+        }
+        return longestWord;
+    }
+}
+//program 3
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+@WebServlet("/ReservationServlet")
+public class ReservationServlet extends HttpServlet {
+    private static final long serialVersionUID = 1L;
+    
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        HttpSession session = request.getSession(true);
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+        
+        // Retrieve user input from the form
+        String name = request.getParameter("name");
+        int seats = Integer.parseInt(request.getParameter("seats"));
+        
+        // Retrieve existing reserved seats from session or create a new list if not exists
+        ArrayList<String> reservedSeats = (ArrayList<String>) session.getAttribute("reservedSeats");
+        if (reservedSeats == null) {
+            reservedSeats = new ArrayList<>();
+        }
+        
+        // Reserve seats
+        for (int i = 1; i <= seats; i++) {
+            reservedSeats.add(name + " - Seat " + i);
+        }
+        
+        // Update session with reserved seats
+        session.setAttribute("reservedSeats", reservedSeats);
+        
+        // Display available and reserved seats
+        out.println("<html><head><title>Seat Reservation</title></head><body>");
+        out.println("<h2>Seat Reservation Successful</h2>");
+        out.println("<h3>Available Seats:</h3>");
+        for (int i = 1; i <= 10; i++) {
+            String seat = "Seat " + i;
+            if (!reservedSeats.contains(seat)) {
+                out.println(seat + "<br>");
+            }
+        }
+        out.println("<h3>Reserved Seats:</h3>");
+        for (String seat : reservedSeats) {
+            out.println(seat + "<br>");
+        }
+        out.println("</body></html>");
+    }
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seat Reservation</title>
+</head>
+<body>
+    <h2>Seat Reservation</h2>
+    <form action="ReservationServlet" method="post">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required><br><br>
+        <label for="seats">Number of Seats:</label>
+        <input type="number" id="seats" name="seats" required><br><br>
+        <input type="submit" value="Reserve Seats">
+    </form>
+</body>
+</html>
+
